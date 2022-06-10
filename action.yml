@@ -28,4 +28,4 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
-      run: GH_TOKEN=${{ inputs.token }} npx semantic-release
+      run: npx semantic-release
