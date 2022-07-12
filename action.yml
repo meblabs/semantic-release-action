@@ -26,7 +26,7 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: npm i -D @semantic-release/commit-analyzer @semantic-release/git @semantic-release/github @semantic-release/npm @semantic-release/release-notes-generator conventional-changelog-conventionalcommits
+      run: npm ci
 
     - name: Semantic Release
       shell: bash
