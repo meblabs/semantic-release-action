@@ -5,11 +5,15 @@ inputs:
   token:
     description: "GITHUB_TOKEN"
     required: true
+  checkout:
+    description: "Flag to indicate whether the repo has already been checked out"
+    default: true
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout
+    - if: ${{ inputs.checkout == 'true' }}
+      name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
