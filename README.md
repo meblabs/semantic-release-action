@@ -29,5 +29,5 @@ jobs:
         uses: meblabs/semantic-release-action@v1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
+          checkout: true
 ```
