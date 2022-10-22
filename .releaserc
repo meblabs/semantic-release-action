@@ -33,10 +33,6 @@
 						"release": "minor"
 					},
 					{
-						"type": "feat",
-						"release": "minor"
-					},
-					{
 						"type": "fix",
 						"release": "patch"
 					},
