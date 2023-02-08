@@ -31,4 +31,4 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
-      run: npx semantic-release
+      run: npx semantic-release@19.0.5
