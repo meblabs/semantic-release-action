@@ -7,19 +7,24 @@ inputs:
     required: true
   checkout:
     description: "Flag to indicate whether the repo has already been checked out"
-    default: true
+    default: 'true'
   node-version:
     description: "Pick the node version to use [20.x, 22.x]"
-    default: 20.x
+    default: '20.x'
 
 runs:
   using: "composite"
   steps:
     - if: ${{ inputs.checkout == 'true' }}
       name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ inputs.token }}
+        fetch-depth: 0
+
+    - name: Ensure tags
+      shell: bash
+      run: git fetch --tags --force
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
