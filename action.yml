@@ -3,14 +3,29 @@ description: "Composit GitHub Action that use semantic-release to automates the 
 
 inputs:
   token:
-    description: "GITHUB_TOKEN"
+    description: "GITHUB_TOKEN with contents:write"
     required: true
   checkout:
-    description: "Flag to indicate whether the repo has already been checked out"
+    description: "Set to 'false' if the repo is already checked out"
     default: 'true'
   node-version:
     description: "Pick the node version to use [20.x, 22.x]"
-    default: '20.x'
+    default: '22.x'
+  sync:
+    description: "Sync release -> staging after release (only when running on release branch)"
+    default: 'true'
+  bot_name:
+    description: "Bot username for sync commits"
+    required: false
+    default: 'MeblabsBot'
+  bot_email:
+    description: "Bot email for commits"
+    required: false
+    default: 'github@meblabs.com'
+  sync_commit_message:
+    description: "Commit message used when merging release -> staging with -s ours"
+    required: false
+    default: 'chore: history sync release -> staging (ours)'
 
 runs:
   using: "composite"
@@ -21,15 +36,12 @@ runs:
       with:
         token: ${{ inputs.token }}
         fetch-depth: 0
-
-    - name: Ensure tags
-      shell: bash
-      run: git fetch --tags --force
+        fetch-tags: true
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: ${{ inputs.node-version }}
+        node-version: ${{ inputs['node-version'] }}
 
     - name: Install dependencies
       shell: bash
@@ -40,3 +52,42 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
       run: npx semantic-release
+
+    - name: Sync release -> staging
+      if: ${{ inputs.sync == 'true' && github.ref_name == 'release' }}
+      shell: bash
+      env:
+        BOT_NAME: ${{ inputs.bot_name }}
+        BOT_EMAIL: ${{ inputs.bot_email }}
+        SYNC_MSG: ${{ inputs.sync_commit_message }}
+      run: |
+        set -euo pipefail
+
+        git config user.name "${BOT_NAME}"
+        git config user.email "${BOT_EMAIL}"
+
+        git fetch origin --prune --tags release staging
+
+        # Check if 'staging' exists
+        if ! git ls-remote --exit-code --heads origin staging >/dev/null 2>&1; then
+          echo "Branch 'staging' not found on origin. Skipping."
+          exit 0
+        fi
+
+        # Align staging with release
+        git checkout -B staging origin/staging
+        # Try fast-forward, otherwise perform a history-only merge using the 'ours' strategy
+        if git merge --ff-only origin/release; then
+          echo "Fast-forward merge release -> staging"
+        else
+          echo "Non-fast-forward. Performing history-only merge with -s ours to import ancestry without changing files."
+          git merge -s ours --no-ff origin/release -m "${SYNC_MSG}"
+        fi
+
+        # Push only if HEAD moved relative to origin/staging (tree may be identical with -s ours)
+        if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/staging)" ]; then
+          echo "No new commit to push."
+          exit 0
+        fi
+
+        git push origin HEAD:staging
