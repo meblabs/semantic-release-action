@@ -25,7 +25,7 @@ inputs:
   sync_commit_message:
     description: "Commit message used when merging release -> staging with -s ours"
     required: false
-    default: 'chore: history sync release -> staging (ours)'
+    default: 'chore: history sync release -> staging [skip ci]'
 
 runs:
   using: "composite"
