@@ -7,25 +7,25 @@ inputs:
     required: true
   checkout:
     description: "Set to 'false' if the repo is already checked out"
-    default: 'true'
+    default: "true"
   node-version:
     description: "Pick the node version to use [20.x, 22.x]"
-    default: '22.x'
+    default: "22.x"
   sync:
     description: "Sync release -> staging after release (only when running on release branch)"
-    default: 'true'
+    default: "true"
   bot_name:
     description: "Bot username for sync commits"
     required: false
-    default: 'MeblabsBot'
+    default: "MeblabsBot"
   bot_email:
     description: "Bot email for commits"
     required: false
-    default: 'github@meblabs.com'
+    default: "github@meblabs.com"
   sync_commit_message:
     description: "Commit message used when merging release -> staging with -s ours"
     required: false
-    default: 'chore: history sync release -> staging [skip ci]'
+    default: "chore: history sync release -> staging"
 
 runs:
   using: "composite"
@@ -63,28 +63,50 @@ runs:
       run: |
         set -euo pipefail
 
+        # Configure author for the sync commit(s)
         git config user.name "${BOT_NAME}"
         git config user.email "${BOT_EMAIL}"
 
+        # Ensure we have fresh refs
         git fetch origin --prune --tags release staging
 
-        # Check if 'staging' exists
+        # Exit if 'staging' does not exist on remote
         if ! git ls-remote --exit-code --heads origin staging >/dev/null 2>&1; then
           echo "Branch 'staging' not found on origin. Skipping."
           exit 0
         fi
 
-        # Align staging with release
+        # Start from remote staging exactly
         git checkout -B staging origin/staging
-        # Try fast-forward, otherwise perform a history-only merge using the 'ours' strategy
+
+        # Try a fast-forward first; if it works, push and exit (CI will run)
         if git merge --ff-only origin/release; then
           echo "Fast-forward merge release -> staging"
-        else
-          echo "Non-fast-forward. Performing history-only merge with -s ours to import ancestry without changing files."
-          git merge -s ours --no-ff origin/release -m "${SYNC_MSG}"
+          git push origin HEAD:staging
+          exit 0
         fi
 
-        # Push only if HEAD moved relative to origin/staging (tree may be identical with -s ours)
+        # Prepare a merge commit without committing yet; we only need the merge parents
+        git merge --no-ff --no-commit -X theirs origin/release || true
+
+        # Replace the merge result tree with the exact tree of origin/release
+        git rm -r --quiet .
+        git checkout origin/release -- .
+        git add -A
+
+        # Decide commit message suffix: append [skip ci] only if no tree changes vs current HEAD
+        if git diff --quiet --staged; then
+          COMMIT_MSG="${SYNC_MSG} [skip ci]"
+          echo "No tree changes. Creating ancestry-only merge with [skip ci]"
+        else
+          COMMIT_MSG="${SYNC_MSG}"
+          echo "Tree changed. Creating merge that updates staging code (no [skip ci])"
+        fi
+
+        # Create the merge commit with the prepared tree and parents
+        git commit -m "${COMMIT_MSG}"
+
+        # Push only if HEAD advanced
         if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/staging)" ]; then
           echo "No new commit to push."
           exit 0
