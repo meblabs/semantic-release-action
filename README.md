@@ -35,7 +35,7 @@ Place the `.releaserc` config file in the main directory and customize it if nee
 - name: Semantic Release
   uses: meblabs/semantic-release-action@v2
   with:
-    token: ${{ secrets.GITHUB_TOKEN }}
+    token: ${{ secrets.MEBBOT }}
     checkout: true
     node-version: 22.x           # optional
     sync: true                   # default: true
@@ -47,12 +47,13 @@ Place the `.releaserc` config file in the main directory and customize it if nee
   uses: actions/checkout@v4
   with:
     fetch-depth: 0              
-    fetch-tags: true            
+    fetch-tags: true
+    token: ${{ secrets.MEBBOT }}            
 
 - name: Semantic Release
   uses: meblabs/semantic-release-action@v2
   with:
-    token: ${{ secrets.GITHUB_TOKEN }}
+    token: ${{ secrets.MEBBOT }}
     checkout: false
     sync: true
 ```
