@@ -90,9 +90,7 @@ runs:
         git merge --no-ff --no-commit -X theirs origin/release || true
 
         # Replace the merge result tree with the exact tree of origin/release
-        git rm -r --quiet .
-        git checkout origin/release -- .
-        git add -A
+        git read-tree --reset -u origin/release
 
         # Decide commit message suffix: append [skip ci] only if no tree changes vs current HEAD
         if git diff --quiet --staged; then
