@@ -1,0 +1,39 @@
+name: Move major tag
+
+# When a Dependabot fix lands on main, move the latest major tag (e.g. v3)
+# onto the new commit so every consumer pinned to @v3 picks up the fix.
+# Human feature commits are ignored on purpose: for those you create the
+# next major tag (v4, ...) manually and choose per repo when to adopt it.
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    # Only react to Dependabot commits, not to your manual feature pushes.
+    if: >
+      github.event.head_commit.author.username == 'dependabot[bot]' ||
+      (startsWith(github.event.head_commit.message, 'fix') &&
+       contains(github.event.head_commit.message, 'bump'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Move latest major tag to HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Highest existing major tag of the form vN (v1, v2, v3, ...)
+          latest_major=$(git tag -l 'v[0-9]*' | grep -E '^v[0-9]+$' | sort -V | tail -1)
+
+          echo "Moving ${latest_major} -> $(git rev-parse --short "${GITHUB_SHA}")"
+          git tag -f "${latest_major}" "${GITHUB_SHA}"
+          git push origin "refs/tags/${latest_major}" --force

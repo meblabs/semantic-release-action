@@ -1,0 +1,30 @@
+name: Dependabot auto-merge
+
+# Auto-merges Dependabot PRs for SECURITY and PATCH updates only.
+# Minor/major bumps stay as PRs for you to review and tag manually.
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      # dependabot/* is not in the ref-pin allowlist, so it is hash-pinned.
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2.5.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ghsa-id is set when the PR resolves a security advisory.
+      # update-type is the semver bump kind for plain version updates.
+      - name: Enable auto-merge (security or patch)
+        if: steps.meta.outputs.ghsa-id != '' || steps.meta.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

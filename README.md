@@ -1,10 +1,16 @@
 # Semantic Release Action
 
+[![zizmor](https://github.com/meblabs/semantic-release-action/actions/workflows/zizmor.yml/badge.svg)](https://github.com/meblabs/semantic-release-action/actions/workflows/zizmor.yml)
+
 Composite GitHub Action that uses [semantic-release](https://github.com/semantic-release/semantic-release) to:
 - calculate the next version based on conventional commits
 - generate release notes
 - publish tags and GitHub Releases
 - **optional**: synchronize `release → staging` to ensure prereleases are based on the latest stable
+
+> [!IMPORTANT]
+> This action relies on `actions/checkout@v6` and `actions/setup-node@v6`, which run on the Node 24 runtime.
+> Use it on `ubuntu-latest` (GitHub-hosted) or, on self-hosted runners, make sure the runner agent is recent enough to provide Node 24 (runner `>= v2.327.1`).
 
 ## Requirements for the repository using this action
 
@@ -44,7 +50,7 @@ Place the `.releaserc` config file in the main directory and customize it if nee
 **Option 2 · Explicit checkout in the workflow**
 ```yml
 - name: Checkout
-  uses: actions/checkout@v4
+  uses: actions/checkout@v6
   with:
     fetch-depth: 0              
     fetch-tags: true
