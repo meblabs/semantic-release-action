@@ -1,14 +1,13 @@
 version: 2
 updates:
-  # Keep the actions used by this composite action up to date.
-  # Dependabot tracks the concrete version behind each major tag (v6, ...)
-  # and opens a PR when a new release (including security patches) is available.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    # Wait before adopting freshly-published versions (supply-chain safety).
+    # Security updates are NOT subject to cooldown, so security PRs stay immediate.
+    cooldown:
+      default-days: 7
     commit-message:
-      # `fix:` so security bumps are merged and the latest major tag (e.g. v3)
-      # can be moved to the new commit by the "move-major-tag" workflow.
       prefix: "fix"
       prefix-development: "fix"
