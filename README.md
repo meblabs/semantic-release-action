@@ -1,6 +1,9 @@
 # Semantic Release Action
 
+
 [![zizmor](https://github.com/meblabs/semantic-release-action/actions/workflows/zizmor.yml/badge.svg)](https://github.com/meblabs/semantic-release-action/actions/workflows/zizmor.yml)
+![type](https://img.shields.io/badge/type-Composite%20Action-2ea44f)
+[![](https://img.shields.io/static/v1?label=MEBlabs&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/meblabs)
 
 Composite GitHub Action that uses [semantic-release](https://github.com/semantic-release/semantic-release) to:
 - calculate the next version based on conventional commits
