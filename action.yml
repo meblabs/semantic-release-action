@@ -35,7 +35,7 @@ runs:
       # Credentials MUST persist here: semantic-release (@semantic-release/git) and the
       # "Sync release -> staging" step below push back to the repo using them.
       # This action uploads no artifacts, so the artipacked leak path does not apply.
-      uses: actions/checkout@v6 # zizmor: ignore[artipacked]
+      uses: actions/checkout@v6.0.3 # zizmor: ignore[artipacked]
       with:
         token: ${{ inputs.token }}
         fetch-depth: 0
